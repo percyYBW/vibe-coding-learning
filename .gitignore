@@ -1,0 +1,15 @@
+# ===== Git 黑名单（拍照时自动跳过这些）=====
+
+# 密钥和配置类：永远不上传！
+.env
+.env.*
+
+# AI 助手的工作数据（本机私有，不上传）
+.workbuddy/
+
+# 依赖包目录（体积巨大，靠 package.lock 重建）
+node_modules/
+
+# 系统垃圾文件
+Thumbs.db
+.DS_Store
