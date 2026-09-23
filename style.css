@@ -1,0 +1,440 @@
+/* ============================================================
+   跑团角色卡画廊 · 共用样式表
+   三个页面（画廊 / 详情 / 管理）都引入这一份，保证长相统一。
+   规则八.1：全部中文注释，命名用简单直白的英文。
+   ============================================================ */
+
+/* ---------- 全局：配色与基础排版 ---------- */
+:root {
+  /* 主色：暗红棕，像旧羊皮纸上的火漆印，配跑团的奇幻调性 */
+  --main-color: #7c3f2e;
+  --main-dark: #5a2c1f;
+  /* 底色与卡片色 */
+  --page-bg: #f7f4ef;
+  --card-bg: #ffffff;
+  --line-color: #e3ddd3;
+  /* 文字颜色：正文深灰，次要信息浅灰 */
+  --text-main: #2f2a26;
+  --text-light: #857e75;
+}
+
+* {
+  /* 让所有元素的宽度把内边距算进去，布局不容易撑破 */
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  background-color: var(--page-bg);
+  color: var(--text-main);
+  line-height: 1.7;
+}
+
+/* ---------- 顶部标题栏 ---------- */
+.top-bar {
+  background-color: var(--main-color);
+  color: #ffffff;
+  padding: 18px 20px;
+}
+
+.top-bar h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+/* 标题旁边的小字：用来标明"你现在在哪个页面" */
+.top-bar .sub-text {
+  margin: 4px 0 0;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+/* ---------- 页面主体容器 ---------- */
+.page-box {
+  /* 最宽 960px，再宽就往两边留白，手机上自动变成通栏 */
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* ---------- 画廊墙：角色卡网格 ---------- */
+.card-wall {
+  display: grid;
+  /* 自动排布：每列最少 150px，屏幕宽就多排几列，窄就少排 */
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+/* 一张角色卡 */
+.card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--line-color);
+  border-radius: 10px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: transform 0.15s;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+}
+
+/* 卡片的图片区：固定成 3:4 的竖版画幅，和立绘比例一致 */
+.card-img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background-color: #efeae2;
+  display: block;
+}
+
+/* 没有立绘时显示的文字占位块 */
+.card-img-empty {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background-color: #efeae2;
+  color: var(--text-light);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-name {
+  padding: 10px;
+  font-size: 15px;
+  text-align: center;
+}
+
+/* 角色名下面的一行小字：职业 · 等级（没填这两项时整行不出现） */
+.card-sub {
+  /* 负 margin 抵消名字那行的下内边距，两行挨紧一些 */
+  margin-top: -6px;
+  padding: 0 10px 10px;
+  font-size: 12px;
+  color: var(--text-light);
+  text-align: center;
+}
+
+/* ---------- 按钮 ---------- */
+.btn {
+  display: inline-block;
+  padding: 10px 18px;
+  background-color: var(--main-color);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn:hover {
+  background-color: var(--main-dark);
+}
+
+/* 次要按钮：白底描边 */
+.btn-second {
+  background-color: transparent;
+  color: var(--main-color);
+  border: 1px solid var(--main-color);
+}
+
+.btn-second:hover {
+  background-color: #f0e8e4;
+}
+
+/* ---------- 表单 ---------- */
+.form-row {
+  margin-bottom: 16px;
+}
+
+.form-row label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 6px;
+  color: var(--text-light);
+}
+
+.form-row input,
+.form-row textarea {
+  width: 100%;
+  padding: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  border: 1px solid var(--line-color);
+  border-radius: 8px;
+  background-color: var(--card-bg);
+  color: var(--text-main);
+}
+
+.form-row textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+/* 表单里的分区标题：身份 / 六属性 / 战斗数值 / 叙事 */
+.form-group-title {
+  margin: 26px 0 12px;
+  padding-left: 9px;
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--main-color);
+  /* 左侧一小条主色，像档案卡的标签条 */
+  border-left: 3px solid var(--main-color);
+}
+
+/* 并排的小字段区：宽屏自动排 3 列，窄屏自动折成 1 列 */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0 14px;
+}
+
+/* 人格四件套这类短文本，textarea 不用默认那么高，四栏并排才不占满一屏 */
+.form-grid-text textarea {
+  min-height: 72px;
+}
+
+/* 让数字输入框里的数字好认 */
+.form-row input[type="number"] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 提示文字 ---------- */
+/* 空状态：一个角色都没有时的引导 */
+.empty-tip {
+  background-color: var(--card-bg);
+  border: 1px dashed var(--line-color);
+  border-radius: 10px;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-light);
+}
+
+/* 一条操作反馈（成功 / 出错都用它，靠颜色区分） */
+.message {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.message-ok {
+  background-color: #e8f3ea;
+  color: #256b39;
+}
+
+.message-error {
+  background-color: #fbeae7;
+  color: #a3352a;
+}
+
+/* ---------- 详情页 ---------- */
+.detail-layout {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.detail-img {
+  /* 立绘占了画面的左边一块，窄屏时自动换行到上方 */
+  flex: 0 0 260px;
+  max-width: 100%;
+}
+
+/* 立绘的"外框"：脚本往里放图片，没有图片时就剩占位块 */
+.detail-img-box {
+  flex: 0 0 260px;
+  max-width: 100%;
+}
+
+.detail-img img,
+.detail-img-box img {
+  width: 100%;
+  border-radius: 10px;
+  display: block;
+}
+
+/* 详情页里的占位块：和图片一样宽，画幅也是 3:4，切换时布局不跳动 */
+.card-img-empty.detail-img {
+  width: 100%;
+  flex: none;
+}
+
+.detail-text {
+  flex: 1 1 320px;
+}
+
+.detail-text h2 {
+  margin-top: 0;
+}
+
+/* 详情页里的小节标题（属性 / 背景） */
+.detail-section {
+  margin-top: 20px;
+}
+
+.detail-section h3 {
+  font-size: 15px;
+  color: var(--main-color);
+  margin-bottom: 6px;
+}
+
+/* 长文本保留换行显示 */
+.detail-section p {
+  margin: 0;
+  /* pre-wrap：既按原样保留换行，又能在太长时自动折行 */
+  white-space: pre-wrap;
+}
+
+/* 身份标签（职业 / 等级 / 种族 / 阵营 / 玩家名）：一行小圆片 */
+.identity-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 0;
+}
+
+.identity-tags span {
+  padding: 3px 11px;
+  background-color: #f0e8e4;
+  color: var(--main-color);
+  border-radius: 20px;
+  font-size: 13px;
+  /* 标签文字不要被压成两行 */
+  white-space: nowrap;
+}
+
+/* 六属性表：数值 + 调整值 */
+.attr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.attr-table th,
+.attr-table td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--line-color);
+}
+
+.attr-table th {
+  font-size: 13px;
+  font-weight: normal;
+  color: var(--text-light);
+}
+
+/* 属性名那一列稍微收窄一点，数值和调整值留出空间 */
+.attr-table th:first-child,
+.attr-table td:first-child {
+  width: 40%;
+}
+
+/* 数值加粗，调整值用主色，眼睛一扫就知道哪个是重点 */
+.attr-table .attr-value {
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+}
+
+.attr-table .attr-mod {
+  color: var(--main-color);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 性格与羁绊：左边小标签，右边正文，一行一项 */
+.trait-list {
+  margin: 0;
+}
+
+.trait-list > div {
+  display: flex;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line-color);
+}
+
+/* 最后一项不要下划线，收尾干净 */
+.trait-list > div:last-child {
+  border-bottom: none;
+}
+
+.trait-list dt {
+  flex: 0 0 52px;
+  font-size: 14px;
+  color: var(--main-color);
+}
+
+.trait-list dd {
+  flex: 1;
+  margin: 0;
+  /* 保留原文换行（"个性"那栏常常是好几行） */
+  white-space: pre-wrap;
+}
+
+/* ---------- 底部信息 ---------- */
+.bottom-bar {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px;
+  color: var(--text-light);
+  font-size: 13px;
+}
+
+/* ---------- 管理链接展示区（小步 6）---------- */
+.admin-link-box {
+  /* 和表单之间留出距离，视觉上明确是"另一块信息" */
+  margin-top: 28px;
+  padding: 14px 16px;
+  background: var(--card-bg);
+  border: 1px dashed var(--line-color);
+  border-radius: 10px;
+}
+
+.admin-link-box .sub-text {
+  margin: 0 0 6px;
+}
+
+.link-text {
+  /* 口令那段字要用等宽字体，避免 0 和 O 这种看混 */
+  margin: 6px 0;
+  padding: 8px 10px;
+  background: var(--page-bg);
+  border-radius: 6px;
+  font-family: Consolas, Menlo, monospace;
+  font-size: 13px;
+  color: var(--main-color);
+  /* 链接很长时允许换行，手机上不会撑出横向滚动条（验收 #7） */
+  word-break: break-all;
+}
+
+.admin-link-box code {
+  padding: 1px 5px;
+  background: var(--page-bg);
+  border-radius: 4px;
+  font-family: Consolas, Menlo, monospace;
+  font-size: 12px;
+}
+
+/* ---------- 手机端微调（验收 #7）---------- */
+@media (max-width: 480px) {
+  .top-bar h1 {
+    font-size: 19px;
+  }
+
+  .page-box {
+    padding: 14px;
+  }
+
+  /* 手机上卡片排两列，别挤成一列显得太空 */
+  .card-wall {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 12px;
+  }
+}

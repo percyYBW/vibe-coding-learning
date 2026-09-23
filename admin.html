@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<!--
+  管理页 · DM 在这里添加或更新角色（写入功能）
+  依据：PRD 验收 #3（添加后画廊立刻多一张卡）、#4（更新即覆盖并标注时间）、#6（立绘 ≤5MB）
+  说明：本页承载写入操作，写法上的"门"是链接里的口令（小步 6 接上）
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>添加 / 更新角色 · 跑团角色卡档案馆</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top-bar">
+    <h1>添加 / 更新角色</h1>
+    <p class="sub-text">DM 专用 · 填好保存，画廊立刻更新</p>
+  </header>
+
+  <main class="page-box">
+    <!-- 操作反馈区（保存成功 / 出错提示都显示在这里） -->
+    <div id="message-box"></div>
+
+    <form id="character-form">
+      <!-- 角色名：必填 -->
+      <div class="form-row">
+        <label for="input-name">角色名（必填）</label>
+        <input type="text" id="input-name" placeholder="例如：灰烬骑士 · 卡兰德" required>
+      </div>
+
+      <!-- 简介 -->
+      <div class="form-row">
+        <label for="input-summary">一句话简介</label>
+        <input type="text" id="input-summary" placeholder="例如：失去记忆的雇佣骑士">
+      </div>
+
+      <!-- 身份：这张卡属于谁、什么职业什么等级
+           字段依据：Percy 提供的 NekoWorks DND 5E 人物卡 v4.4.0（主要表） -->
+      <div class="form-group-title">身份</div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label for="input-player">玩家名</label>
+          <input type="text" id="input-player" placeholder="例如：Percy">
+        </div>
+
+        <div class="form-row">
+          <label for="input-class">职业</label>
+          <input type="text" id="input-class" placeholder="例如：游荡者">
+        </div>
+
+        <div class="form-row">
+          <label for="input-level">等级</label>
+          <input type="number" id="input-level" min="1" max="20" placeholder="例如：3">
+        </div>
+
+        <div class="form-row">
+          <label for="input-race">种族</label>
+          <input type="text" id="input-race" placeholder="例如：半精灵">
+        </div>
+
+        <div class="form-row">
+          <label for="input-alignment">阵营</label>
+          <input type="text" id="input-alignment" placeholder="例如：混乱中立">
+        </div>
+      </div>
+
+      <!-- 六属性：DND 的六项核心数值，每条都是 1~30 的整数。
+           调整值不填——它是固定公式算出来的（见 app.js），填了反而容易写错。 -->
+      <div class="form-group-title">六属性</div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label for="input-strength">力量</label>
+          <input type="number" id="input-strength" min="1" max="30" placeholder="例如：14">
+        </div>
+
+        <div class="form-row">
+          <label for="input-dexterity">敏捷</label>
+          <input type="number" id="input-dexterity" min="1" max="30" placeholder="例如：18">
+        </div>
+
+        <div class="form-row">
+          <label for="input-constitution">体质</label>
+          <input type="number" id="input-constitution" min="1" max="30" placeholder="例如：16">
+        </div>
+
+        <div class="form-row">
+          <label for="input-intelligence">智力</label>
+          <input type="number" id="input-intelligence" min="1" max="30" placeholder="例如：11">
+        </div>
+
+        <div class="form-row">
+          <label for="input-wisdom">感知</label>
+          <input type="number" id="input-wisdom" min="1" max="30" placeholder="例如：16">
+        </div>
+
+        <div class="form-row">
+          <label for="input-charisma">魅力</label>
+          <input type="number" id="input-charisma" min="1" max="30" placeholder="例如：11">
+        </div>
+      </div>
+
+      <!-- 战斗数值：跑团时最常被问到的两个数 -->
+      <div class="form-group-title">战斗数值</div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label for="input-hp">生命值 HP</label>
+          <input type="number" id="input-hp" min="0" placeholder="例如：27">
+        </div>
+
+        <div class="form-row">
+          <label for="input-ac">护甲等级 AC</label>
+          <input type="number" id="input-ac" min="0" placeholder="例如：16">
+        </div>
+      </div>
+
+      <!-- 叙事部分：这张卡"讲什么" -->
+      <div class="form-group-title">叙事</div>
+
+      <!-- 背景 -->
+      <div class="form-row">
+        <label for="input-background">背景故事（可多行）</label>
+        <textarea id="input-background" placeholder="角色的来历、经历、牵挂……"></textarea>
+      </div>
+
+      <!-- 人格四件套：DND 人物卡上固定的四问，最能体现"这是个什么人"。
+           字段依据：Percy 提供的 NekoWorks DND 5E 人物卡「背景」表 -->
+      <div class="form-grid form-grid-text">
+        <div class="form-row">
+          <label for="input-personality">个性特点</label>
+          <textarea id="input-personality" placeholder="平时的言行、口头禅"></textarea>
+        </div>
+
+        <div class="form-row">
+          <label for="input-ideals">理念</label>
+          <textarea id="input-ideals" placeholder="她为什么而行动"></textarea>
+        </div>
+
+        <div class="form-row">
+          <label for="input-bonds">羁绊</label>
+          <textarea id="input-bonds" placeholder="她放不下什么"></textarea>
+        </div>
+
+        <div class="form-row">
+          <label for="input-flaws">缺陷</label>
+          <textarea id="input-flaws" placeholder="她的弱点"></textarea>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label for="input-appearance">外貌描述（可多行）</label>
+        <textarea id="input-appearance" placeholder="穿着、外貌、随身装备……"></textarea>
+      </div>
+
+      <!-- 立绘：可选（很多人没图，所以不能强制）
+           本期走"图片链接"方式，不直接传文件——
+           原因：云存储只服务已登录用户，而我们本期不做账号系统（见 Day 7 拍板 A+C）。
+           留空也能保存，画廊会显示"暂无立绘"占位块。 -->
+      <div class="form-row">
+        <label for="input-portrait">立绘图片链接（可选，粘贴图片网址）</label>
+        <input type="url" id="input-portrait" placeholder="例如：https://example.com/my-character.png">
+        <p class="sub-text">留空也可以保存，画廊里会显示"暂无立绘"。</p>
+      </div>
+
+      <p>
+        <button type="submit" class="btn">保存角色</button>
+        <a class="btn btn-second" href="index.html">返回画廊</a>
+      </p>
+    </form>
+
+    <!-- 管理链接展示区（小步 6）：
+         把带口令的完整地址显示出来，方便 DM 收藏，下次直接打开就能改卡。 -->
+    <div class="admin-link-box">
+      <p class="sub-text">这条是你的管理链接（收藏它，下次直接打开就能改卡）：</p>
+      <p class="link-text" id="admin-link">（需要正确口令才会显示）</p>
+      <p class="sub-text">发给团友的是另一条：<code>index.html</code>（只读浏览，不带口令）。</p>
+    </div>
+  </main>
+
+  <footer class="bottom-bar">
+    <p>跑团角色卡档案馆 · 管理页（DM 专用）</p>
+  </footer>
+
+  <!-- 云服务 SDK：从本地文件引入（本项目没有构建步骤，所以用 <script> 方式）
+       为什么不走在线 CDN：实测外部 CDN 偶尔会返回"空响应"，
+       那样 SDK 就没加载出来，整页会显示"读不到角色卡"。
+       存一份在本地方便离线开发，页面也不再受网络波动影响。 -->
+  <script src="vendor/workbuddy-cloud-sdk.js"></script>
+  <!-- 云服务公开配置：下面两个值来自开通云服务时返回的 publicConfig -->
+  <script src="cloud-config.js"></script>
+  <!-- 页面自己的脚本，最后引入，保证前面的东西都已就位 -->
+  <script src="app.js"></script>
+</body>
+</html>

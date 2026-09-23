@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<!--
+  角色详情页 · 点开一张卡，看完整文字卡 + 立绘大图
+  依据：PRD 验收 #2（1 秒内打开详情页，完整角色卡内容 + 立绘大图）
+  说明：网址里带 id（如 character.html?id=1），脚本靠它知道该显示哪张卡
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>角色详情 · 跑团角色卡档案馆</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top-bar">
+    <h1>角色详情</h1>
+    <p class="sub-text">跑团角色卡档案馆 · 设定集的一页</p>
+  </header>
+
+  <main class="page-box">
+    <div id="message-box"></div>
+
+    <!-- 左右两栏：左边立绘，右边文字（窄屏自动上下排） -->
+    <div class="detail-layout">
+      <!-- 立绘区：脚本会往里放图片，没有链接时显示"暂无立绘"占位块 -->
+      <div class="detail-img-box" id="character-portrait">
+        <div class="card-img-empty detail-img">暂无立绘</div>
+      </div>
+
+      <!-- 文字区 -->
+      <div class="detail-text">
+        <h2 id="character-name">正在读取……</h2>
+        <p id="character-summary"></p>
+
+        <!-- 身份标签：职业 / 等级 / 种族 / 阵营 / 玩家名（没有的不显示） -->
+        <div class="identity-tags" id="character-identity"></div>
+
+        <!-- 六属性：数值 + 调整值。
+             调整值不存库，由脚本按固定公式算出来（⌊(数值−10)÷2⌋）。
+             字段依据：NekoWorks DND 5E 人物卡 v4.4.0（主要表） -->
+        <div class="detail-section">
+          <h3>六属性</h3>
+          <table class="attr-table">
+            <thead>
+              <tr>
+                <th>属性</th>
+                <th>数值</th>
+                <th>调整值</th>
+              </tr>
+            </thead>
+            <tbody id="character-attributes">
+              <tr><td colspan="3">正在读取……</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 战斗数值：跑团时最常被问到的两个数 -->
+        <div class="detail-section">
+          <h3>战斗数值</h3>
+          <p id="character-combat">正在读取……</p>
+        </div>
+
+        <div class="detail-section">
+          <h3>背景</h3>
+          <p id="character-background">正在读取……</p>
+        </div>
+
+        <!-- 性格与羁绊（DND 人物卡的四件套）。
+             内容为空的项脚本会自动省掉，不会留下一排空标签。 -->
+        <div class="detail-section" id="character-traits-box">
+          <h3>性格与羁绊</h3>
+          <dl class="trait-list" id="character-traits"></dl>
+        </div>
+
+        <!-- 外貌描述：完全没填时整节不显示 -->
+        <div class="detail-section" id="character-appearance-box">
+          <h3>外貌描述</h3>
+          <p id="character-appearance">正在读取……</p>
+        </div>
+
+        <p class="sub-text" id="character-time" style="margin-top: 20px;"></p>
+      </div>
+    </div>
+
+    <p style="margin-top: 24px;">
+      <a class="btn btn-second" href="index.html">← 返回画廊</a>
+    </p>
+  </main>
+
+  <footer class="bottom-bar">
+    <p>跑团角色卡档案馆 · MVP 第一版</p>
+  </footer>
+
+  <!-- 云服务 SDK：从本地文件引入（本项目没有构建步骤，所以用 <script> 方式）
+       为什么不走在线 CDN：实测外部 CDN 偶尔会返回"空响应"，
+       那样 SDK 就没加载出来，整页会显示"读不到角色卡"。
+       存一份在本地方便离线开发，页面也不再受网络波动影响。 -->
+  <script src="vendor/workbuddy-cloud-sdk.js"></script>
+  <!-- 云服务公开配置：下面两个值来自开通云服务时返回的 publicConfig -->
+  <script src="cloud-config.js"></script>
+  <!-- 页面自己的脚本，最后引入，保证前面的东西都已就位 -->
+  <script src="app.js"></script>
+</body>
+</html>

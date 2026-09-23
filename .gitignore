@@ -10,6 +10,9 @@
 # 依赖包目录（体积巨大，靠 package.lock 重建）
 node_modules/
 
+# 云服务工具生成的本地绑定卡（内含本机绝对路径，别人拿去没用）
+*.genie
+
 # 系统垃圾文件
 Thumbs.db
 .DS_Store

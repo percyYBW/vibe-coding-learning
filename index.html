@@ -1,14 +1,49 @@
 <!DOCTYPE html>
-<!-- 我的第一个占位页：Day 2 只求"存在"，Day 7 才开始真正做 MVP -->
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>vibe-coding-learning</title>
+<!--
+  画廊页（首页 · 浏览链接）· 打开整团的角色卡墙
+  依据：PRD 验收 #1（3 秒内看到卡片墙，无角色时显示引导文案）
+  数据来源：云端 characters 表
+  说明：这一页就是发给全团的"浏览链接"，只读、不需要口令
+-->
+<html lang="zh-CN" data-page-node-id="eyg7TytZH9mFqIhChpWCqc">
+<head data-page-node-id="4SGcTyE9dySFE3Bvd3ARqo">
+  <meta charset="UTF-8" data-page-node-id="wCyJfqBTgrebloWgSZiUOr">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="qozriyeEHwBzqGluECpcql">
+  <title>跑团角色卡档案馆</title>
+  <link rel="stylesheet" href="style.css" data-page-node-id="InNqivbLImiN0ptVjt1zbA">
 </head>
-<body>
-  <h1>🌱 Percy 的 vibe coding 学习工作区</h1>
-  <p>这个页面是 Day 2 的占位页——它存在的意义是验证「本地 → GitHub」的搬运通道已经打通。</p>
-  <p>真正的作品会从 Day 7 开始在这里生长。</p>
+<body data-page-node-id="Zh0zDHApGKufMAIDNBWQg9">
+  <!-- 顶部标题栏 -->
+  <header class="top-bar" data-page-node-id="B5HDGxkWMH5CDf051efEu0">
+    <h1 data-page-node-id="53B5rp7WMaF7c7YljXgk9m">跑团角色卡档案馆</h1>
+    <p class="sub-text" data-page-node-id="i1TkRJwQBuHZ3Ke7CLre4A">跑完团，角色们在这里活下去</p>
+  </header>
+
+  <main class="page-box" data-page-node-id="DvFz6AxBFu1wejObh7W2Gx">
+    <!-- 状态提示区：显示"正在读取""读取失败"等信息 -->
+    <div id="message-box" data-page-node-id="DoMCHYvCTBtQFr6h1f8lLt"></div>
+
+    <!-- 画廊墙：角色卡一张张排在这里，内容由 app.js 从云端读出后填进来 -->
+    <div class="card-wall" id="card-wall" data-page-node-id="OzhAcoHnMqiLD3PCVNPHo7"></div>
+
+    <!-- 这里原本有一个"添加 / 更新角色"按钮，小步 6 去掉了。
+         原因：首页就是发给全团的"浏览链接"，上面不该挂管理入口——
+         否则点一下就能进管理页，"双链接"就白分了。
+         DM 的管理入口是自己的管理链接（见 README 或 admin.html 页面显示）。 -->
+  </main>
+
+  <footer class="bottom-bar" data-page-node-id="BQWFFMfKOpkE92pNazuKEP">
+    <p data-page-node-id="QX1p9AiZTwBpWsUc5JXPGQ">跑团角色卡档案馆 · MVP 第一版</p>
+  </footer>
+
+  <!-- 云服务 SDK：从本地文件引入（本项目没有构建步骤，所以用 <script> 方式）
+       为什么不走在线 CDN：实测外部 CDN 偶尔会返回"空响应"，
+       那样 SDK 就没加载出来，整页会显示"读不到角色卡"。
+       存一份在本地方便离线开发，页面也不再受网络波动影响。 -->
+  <script src="vendor/workbuddy-cloud-sdk.js"></script>
+  <!-- 云服务公开配置：下面两个值来自开通云服务时返回的 publicConfig -->
+  <script src="cloud-config.js"></script>
+  <!-- 页面自己的脚本，最后引入，保证前面的东西都已就位 -->
+  <script src="app.js"></script>
 </body>
 </html>
