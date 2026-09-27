@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 8 练习 · 主视图 Mock 版</title>
+  <!--
+    ============================================================
+    Day 8 练习页 · 主视图 Mock 数据版
+    ------------------------------------------------------------
+    生成依据（板块① 的那「一句话」，改写自 Day 4 的 PRD 第 1 节）：
+      「全团角色卡集中在一个网页里，卡片墙浏览，
+        每张卡有立绘、名字和职业等级。」
+
+    这个文件是什么：
+      - 档案馆主视图（画廊墙）的"假数据练习版"。
+      - 只用本地假数据，不连云端、不用 SDK、不碰档案馆现有代码。
+
+    板块③改版后的结构（数据驱动）：
+      1. 页面上不再手写任何卡片 HTML，只留一个空的 #card-wall 舞台。
+      2. 假数据集中放在 JS 里的 MOCK_CHARACTERS 数组（下面 script 第 1 节）。
+      3. renderCard() 是"可复用卡片组件"：给它一个角色对象，它吐一张卡。
+         —— 这就是本页的核心：数据变了，页面跟着变，手不用碰 HTML。
+      4. 页面有四种状态（加载中 / 空 / 错误 / 有数据），
+         点按钮能切换，首次打开会先播 600 毫秒"加载中"再进"有数据"。
+      5. 第 3 周接真实 API 时：把 MOCK_CHARACTERS 换成接口返回的列表，
+         把 showState("data") 换成"请求成功后 showState('data')"，其余不动。
+    ============================================================
+  -->
+  <style>
+    /* ---------- 配色：和档案馆同一套（暗红棕 + 米白） ---------- */
+    :root {
+      --main-color: #7c3f2e;   /* 主色：火漆印红棕 */
+      --page-bg: #f7f4ef;      /* 底色：米白 */
+      --card-bg: #ffffff;      /* 卡片底色 */
+      --line-color: #e3ddd3;   /* 分隔线 */
+      --text-main: #2f2a26;    /* 正文深灰 */
+      --text-light: #857e75;   /* 次要文字浅灰 */
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+      background-color: var(--page-bg);
+      color: var(--text-main);
+      line-height: 1.7;
+    }
+
+    /* ---------- 顶部标题栏 ---------- */
+    .top-bar {
+      background-color: var(--main-color);
+      color: #ffffff;
+      padding: 18px 20px;
+    }
+    .top-bar h1 { margin: 0; font-size: 22px; }
+    .top-bar .sub-text { margin: 4px 0 0; font-size: 13px; opacity: 0.85; }
+
+    /* ---------- 主体容器 ---------- */
+    .page-box { max-width: 960px; margin: 0 auto; padding: 20px; }
+
+    /* 练习页说明框：告诉一个月后的自己这页是干嘛的 */
+    .practice-note {
+      padding: 12px 16px;
+      margin-bottom: 18px;
+      background-color: var(--card-bg);
+      border: 1px dashed var(--line-color);
+      border-radius: 10px;
+      font-size: 13px;
+      color: var(--text-light);
+    }
+    .practice-note p { margin: 4px 0; }
+
+    /* ---------- 四种状态的切换按钮 ---------- */
+    .state-switch { margin-bottom: 18px; }
+
+    .state-switch .sub-label {
+      margin: 0 0 8px;
+      font-size: 13px;
+      color: var(--text-light);
+    }
+
+    .state-btn {
+      padding: 8px 14px;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      border-radius: 8px;
+      background-color: var(--card-bg);
+      color: var(--main-color);
+      border: 1px solid var(--main-color);
+    }
+
+    /* 当前正在展示的状态：用主色实底高亮，一眼看出页面处于哪个状态 */
+    .state-btn.active {
+      background-color: var(--main-color);
+      color: #ffffff;
+    }
+
+    /* ---------- 画廊墙：角色卡网格 ---------- */
+    .card-wall {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 16px;
+      /* 空状态和错误状态的提示框是通栏的，不参与网格分列 */
+      align-items: start;
+    }
+    .card-wall > .empty-tip,
+    .card-wall > .message {
+      grid-column: 1 / -1;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--line-color);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: transform 0.15s;
+    }
+    .card:hover { transform: translateY(-3px); }
+
+    /* 有立绘时的图：固定 3:4 竖版画幅 */
+    .card-img {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+      background-color: #efeae2;
+      display: block;
+    }
+
+    /* 没有立绘时的占位块 */
+    .card-img-empty {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      background-color: #efeae2;
+      color: var(--text-light);
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-name { padding: 10px; font-size: 15px; text-align: center; }
+    .card-sub {
+      margin-top: -6px;
+      padding: 0 10px 10px;
+      font-size: 12px;
+      color: var(--text-light);
+      text-align: center;
+    }
+
+    /* ---------- 状态一：加载中（骨架卡片，闪一闪表示"正在读取"） ---------- */
+    .skeleton-card {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      border-radius: 10px;
+      background-color: #efeae2;
+      /* pulse：透明度呼吸闪烁，纯 CSS 动画，不需要 JS */
+      animation: skeleton-pulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes skeleton-pulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.45; }
+    }
+
+    /* ---------- 状态二：空（和档案馆同款虚线引导框） ---------- */
+    .empty-tip {
+      background-color: var(--card-bg);
+      border: 1px dashed var(--line-color);
+      border-radius: 10px;
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-light);
+    }
+    .empty-tip p { margin: 6px 0; }
+
+    /* ---------- 按钮（空状态引导里那个，练习页里只是摆设） ---------- */
+    .btn {
+      display: inline-block;
+      padding: 10px 18px;
+      background-color: var(--main-color);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    /* ---------- 状态三：错误（红底提示条，和档案馆同款） ---------- */
+    .message {
+      padding: 14px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .message-error {
+      background-color: #fbeae7;
+      color: #a3352a;
+    }
+
+    /* ---------- 底部信息 ---------- */
+    .bottom-bar {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 20px;
+      color: var(--text-light);
+      font-size: 13px;
+    }
+
+    /* ---------- 手机端微调 ---------- */
+    @media (max-width: 480px) {
+      .top-bar h1 { font-size: 19px; }
+      .page-box { padding: 14px; }
+      .card-wall { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部标题栏 -->
+  <header class="top-bar">
+    <h1>跑团角色卡档案馆 · Mock 练习版</h1>
+    <p class="sub-text">Day 8 板块③ · 数据驱动版，全是本地假数据，和线上档案馆无关</p>
+  </header>
+
+  <main class="page-box">
+
+    <!-- 练习页说明 -->
+    <div class="practice-note">
+      <p><strong>这是一张练习页，不是真的档案馆。</strong></p>
+      <p>卡片不再是写死的 HTML，而是由 JS 里的 <strong>MOCK_CHARACTERS 数组</strong>渲染出来的——
+         改数组，页面就变，HTML 一个字不用动。</p>
+      <p>第 3 周接真实 API 时，把这个数组换成接口返回值，主视图就是正式版。</p>
+    </div>
+
+    <!-- 四种状态的切换台：点按钮看页面在不同状态下长什么样 -->
+    <div class="state-switch">
+      <p class="sub-label">点按钮切换四种页面状态（今天思考题的主角——空状态——就在里面）：</p>
+      <button class="state-btn" data-state="loading">① 加载中</button>
+      <button class="state-btn" data-state="empty">② 空</button>
+      <button class="state-btn" data-state="error">③ 错误</button>
+      <button class="state-btn active" data-state="data">④ 有数据</button>
+    </div>
+
+    <!-- ============ 画廊墙的"舞台" ============ -->
+    <!-- 板块①时这里手写了四张卡；板块③起这里由 JS 渲染，HTML 里不再出现卡片 -->
+    <section class="card-wall" id="card-wall"></section>
+    <!-- ============ 舞台结束 ============ -->
+
+  </main>
+
+  <!-- 底部信息 -->
+  <footer class="bottom-bar">
+    Day 8 练习页 · 只为课程作业存在，正式档案馆请看 index.html
+  </footer>
+
+  <script>
+    /* ============================================================
+       Day 8 练习页脚本（规则八.1：全部中文注释，命名简单直白）
+       结构：
+         第 1 节  mock 假数据
+         第 2 节  工具函数（HTML 转义）
+         第 3 节  可复用卡片组件 renderCard（余力加练的答案）
+         第 4 节  四种页面状态的渲染
+         第 5 节  状态切换 + 页面启动
+       ============================================================ */
+
+    /* ---------- 第 1 节：mock 假数据 ---------- */
+    // 页面唯一的数据来源。第 3 周接真实 API 时，把整个数组换成接口返回的列表。
+    // portraitUrl 留空字符串 = 没有立绘，卡片显示"暂无立绘"占位块。
+    var MOCK_CHARACTERS = [
+      { name: "灰烬骑士 · 卡兰德", className: "游荡者",   level: 3, portraitUrl: "" },
+      { name: "药剂师 · 薇拉",     className: "牧师",     level: 2, portraitUrl: "" },
+      { name: "铁砧 · 布洛姆",     className: "战士",     level: 5, portraitUrl: "" },
+      { name: "影歌 · 希尔",       className: "吟游诗人", level: 1, portraitUrl: "" }
+    ];
+
+    /* ---------- 第 2 节：工具函数 ---------- */
+    /**
+     * 把文字里的 < > & 引号转义，防止内容里混进 HTML 把页面搞坏（防 XSS 的习惯）。
+     * @param {string} text 任意文字
+     * @returns {string} 安全的文字
+     */
+    function escapeHtml(text) {
+      // 强转字符串，防止传进来的是数字或空值
+      var safe = String(text == null ? "" : text);
+      return safe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    /* ---------- 第 3 节：可复用卡片组件 ---------- */
+    /**
+     * 渲染一张角色卡（余力加练的答案：这就是"可复用卡片组件"）。
+     * 给它任意一个角色对象，它返回这张卡的 HTML 字符串——
+     * 画廊墙用它，以后详情页缩略图、别的列表页也能用它，卡片长相永远一致。
+     * @param {Object} character 角色：{ name, className, level, portraitUrl }
+     * @returns {string} 一张卡的 HTML
+     */
+    function renderCard(character) {
+      // 有链接放图片，没链接放占位块（和档案馆画廊墙同一个逻辑）
+      var imgPart;
+      if (character.portraitUrl) {
+        imgPart = '<img class="card-img" src="' + escapeHtml(character.portraitUrl) +
+                  '" alt="' + escapeHtml(character.name) + ' 的立绘">';
+      } else {
+        imgPart = '<div class="card-img-empty">暂无立绘</div>';
+      }
+
+      // 副标题：职业 · 等级，哪样没填就省哪样，两样都没有就不出这一行
+      var subParts = [];
+      if (character.className) { subParts.push(escapeHtml(character.className)); }
+      if (character.level)     { subParts.push(character.level + " 级"); }
+      var subPart = subParts.length > 0
+        ? '<div class="card-sub">' + subParts.join(" · ") + "</div>"
+        : "";
+
+      return '<div class="card">' +
+               imgPart +
+               '<div class="card-name">' + escapeHtml(character.name) + "</div>" +
+               subPart +
+             "</div>";
+    }
+
+    /* ---------- 第 4 节：四种页面状态的渲染 ---------- */
+    // 四种状态都只往同一个舞台 #card-wall 里放内容，互不干扰。
+
+    // 舞台：页面上真正会变化的那块区域
+    var wall = document.getElementById("card-wall");
+
+    /** 状态①：加载中——四张会呼吸闪烁的骨架卡片 */
+    function renderLoading() {
+      var html = "";
+      var i;
+      for (i = 0; i < 4; i++) {
+        html += '<div class="skeleton-card"></div>';
+      }
+      wall.innerHTML = html;
+    }
+
+    /** 状态②：空——一个角色都没有时的引导（按钮在练习页里只是摆设） */
+    function renderEmpty() {
+      wall.innerHTML =
+        '<div class="empty-tip">' +
+          "<p>这个团的角色卡还是空的。</p>" +
+          '<p><a class="btn" href="#" onclick="return false;">添加第一个角色</a></p>' +
+        "</div>";
+    }
+
+    /** 状态③：错误——读取失败时的提示（文案致敬 Day 7 那次 CDN 抽风） */
+    function renderError() {
+      wall.innerHTML =
+        '<div class="message message-error">' +
+          "角色卡读取失败：网络好像抽风了。先刷新试试，再检查网络连接。" +
+        "</div>";
+    }
+
+    /** 状态④：有数据——把角色列表一张张渲染成卡片 */
+    function renderData(list) {
+      var html = "";
+      var i;
+      for (i = 0; i < list.length; i++) {
+        html += renderCard(list[i]);
+      }
+      wall.innerHTML = html;
+    }
+
+    /* ---------- 第 5 节：状态切换 + 页面启动 ---------- */
+    /**
+     * 把页面切到某个状态：先高亮对应按钮，再渲染对应内容。
+     * @param {string} stateName 取值：loading / empty / error / data
+     */
+    function showState(stateName) {
+      // 1. 按钮高亮：谁对应当前状态谁亮
+      var buttons = document.querySelectorAll(".state-btn");
+      var i;
+      for (i = 0; i < buttons.length; i++) {
+        if (buttons[i].getAttribute("data-state") === stateName) {
+          buttons[i].classList.add("active");
+        } else {
+          buttons[i].classList.remove("active");
+        }
+      }
+
+      // 2. 渲染对应内容
+      if (stateName === "loading")      { renderLoading(); }
+      else if (stateName === "empty")   { renderEmpty(); }
+      else if (stateName === "error")   { renderError(); }
+      else                              { renderData(MOCK_CHARACTERS); }
+    }
+
+    // 给四个切换按钮装上"点我切换"的反应
+    var switchButtons = document.querySelectorAll(".state-btn");
+    for (var b = 0; b < switchButtons.length; b++) {
+      switchButtons[b].addEventListener("click", function () {
+        // this 就是被点的那个按钮，读它的 data-state 值
+        showState(this.getAttribute("data-state"));
+      });
+    }
+
+    // 页面启动：先播 600 毫秒"加载中"，模拟真实网络等待，然后进入"有数据"。
+    // 真实版（第 3 周）这里是：发请求 → 成功后 showState("data")，失败 showState("error")。
+    showState("loading");
+    setTimeout(function () {
+      showState("data");
+    }, 600);
+  </script>
+
+</body>
+</html>
