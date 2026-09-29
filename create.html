@@ -1,21 +1,33 @@
 <!DOCTYPE html>
 <!--
-  管理页 · DM 在这里添加或更新角色（写入功能）
-  依据：PRD 验收 #3（添加后画廊立刻多一张卡）、#4（更新即覆盖并标注时间）、#6（立绘 ≤5MB）
-  说明：本页承载写入操作，写法上的"门"是链接里的口令（小步 6 接上）
+  创建角色页（原"管理页"）· 在这里添加或更新角色（写入功能）
+  依据：PRD 验收 #3（添加后画廊立刻多一张卡）、#4（更新即覆盖并标注时间）
+  Day 9 改动：从独立管理页收编为「创建角色」分页，顶部加了全站导航栏；
+  临时放开权限，游客和 DM 共用同一页面，任何人都能创建/修改。
 -->
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>添加 / 更新角色 · 跑团角色卡档案馆</title>
+  <title>创建角色 · 跑团角色卡档案馆</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-page="create">
   <header class="top-bar">
-    <h1>添加 / 更新角色</h1>
-    <p class="sub-text">DM 专用 · 填好保存，画廊立刻更新</p>
+    <h1>创建角色</h1>
+    <p class="sub-text">填好保存，档案馆立刻更新</p>
   </header>
+
+  <!-- 全站导航栏（五页共用，每页都一样；当前页靠 nav.js 高亮） -->
+  <nav class="site-nav">
+    <ul>
+      <li><a href="index.html" data-nav="intro">介绍</a></li>
+      <li><a href="rules.html" data-nav="rules">规则资源</a></li>
+      <li><a href="create.html" data-nav="create">创建角色</a></li>
+      <li><a href="archive.html" data-nav="archive">档案馆</a></li>
+      <li><a href="play.html" data-nav="play">跑团</a></li>
+    </ul>
+  </nav>
 
   <main class="page-box">
     <!-- 操作反馈区（保存成功 / 出错提示都显示在这里） -->
@@ -154,30 +166,22 @@
       <!-- 立绘：可选（很多人没图，所以不能强制）
            本期走"图片链接"方式，不直接传文件——
            原因：云存储只服务已登录用户，而我们本期不做账号系统（见 Day 7 拍板 A+C）。
-           留空也能保存，画廊会显示"暂无立绘"占位块。 -->
+           留空也能保存，档案馆会显示"暂无立绘"占位块。 -->
       <div class="form-row">
         <label for="input-portrait">立绘图片链接（可选，粘贴图片网址）</label>
         <input type="url" id="input-portrait" placeholder="例如：https://example.com/my-character.png">
-        <p class="sub-text">留空也可以保存，画廊里会显示"暂无立绘"。</p>
+        <p class="sub-text">留空也可以保存，档案馆里会显示"暂无立绘"。</p>
       </div>
 
       <p>
         <button type="submit" class="btn">保存角色</button>
-        <a class="btn btn-second" href="index.html">返回画廊</a>
+        <a class="btn btn-second" href="archive.html">返回档案馆</a>
       </p>
     </form>
-
-    <!-- 管理链接展示区（小步 6）：
-         把带口令的完整地址显示出来，方便 DM 收藏，下次直接打开就能改卡。 -->
-    <div class="admin-link-box">
-      <p class="sub-text">这条是你的管理链接（收藏它，下次直接打开就能改卡）：</p>
-      <p class="link-text" id="admin-link">（需要正确口令才会显示）</p>
-      <p class="sub-text">发给团友的是另一条：<code>index.html</code>（只读浏览，不带口令）。</p>
-    </div>
   </main>
 
   <footer class="bottom-bar">
-    <p>跑团角色卡档案馆 · 管理页（DM 专用）</p>
+    <p>跑团角色卡档案馆 · 创建角色页</p>
   </footer>
 
   <!-- 云服务 SDK：从本地文件引入（本项目没有构建步骤，所以用 <script> 方式）
@@ -189,5 +193,7 @@
   <script src="cloud-config.js"></script>
   <!-- 页面自己的脚本，最后引入，保证前面的东西都已就位 -->
   <script src="app.js"></script>
+  <!-- 导航高亮脚本 -->
+  <script src="nav.js"></script>
 </body>
 </html>

@@ -30,7 +30,59 @@ body {
   background-color: var(--page-bg);
   color: var(--text-main);
   line-height: 1.7;
+
+  /* 进入页面时整体"从右滑入 + 淡入"（Day 9：分页滑动切换）。
+     每个页面加载完成后，从右侧稍偏下、半透明的位置滑到正常位置。
+     把切换分页时"整页白屏重载"的生硬感，换成"页面滑进来"的流畅感。
+     时间 0.3 秒：够短不拖沓，够长能看清滑动方向。 */
+  animation: page-slide-in 0.3s ease-out;
 }
+
+/* 页面滑入的关键帧：起点在右下方且透明，终点回到原位且清晰 */
+@keyframes page-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ---------- 档案馆卡片：逐个滑出（Day 9） ---------- */
+/* 每张卡都挂同一个"上滑 + 淡入"动画，但各自带一个越来越大的延迟，
+   这样渲染时第一张先弹出、第二张晚一点、第三张再晚一点……
+   看起来就是卡片一张接一张地滑出来，而不是"啪"一下全出现。 */
+.card {
+  animation: card-pop-in 0.35s ease-out both;
+}
+
+/* 卡片弹出的关键帧：从下方稍远、透明，上滑到原位、清晰 */
+@keyframes card-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 逐张延迟：第 1 张立刻弹，第 2 张晚 0.06 秒，之后每张再递增 0.06 秒。
+   这样卡片是"一个接一个"滑出来，而不是同时蹦出来。
+   用 nth-child 按序号定位，不用写死具体张数，卡多卡少都适用。 */
+.card:nth-child(1) { animation-delay: 0.00s; }
+.card:nth-child(2) { animation-delay: 0.06s; }
+.card:nth-child(3) { animation-delay: 0.12s; }
+.card:nth-child(4) { animation-delay: 0.18s; }
+.card:nth-child(5) { animation-delay: 0.24s; }
+.card:nth-child(6) { animation-delay: 0.30s; }
+.card:nth-child(7) { animation-delay: 0.36s; }
+.card:nth-child(8) { animation-delay: 0.42s; }
+.card:nth-child(9) { animation-delay: 0.48s; }
+.card:nth-child(10) { animation-delay: 0.54s; }
 
 /* ---------- 顶部标题栏 ---------- */
 .top-bar {
@@ -110,13 +162,14 @@ body {
   text-align: center;
 }
 
-/* 角色名下面的一行小字：职业 · 等级（没填这两项时整行不出现） */
+/* 角色名下面的一行小字：职业 · 等级（没填这两项时整行不出现）。
+   原 12px + 浅灰偏小偏淡，提到 13px、颜色加深一档，扫一眼也清楚（Day 9 审查）。 */
 .card-sub {
   /* 负 margin 抵消名字那行的下内边距，两行挨紧一些 */
   margin-top: -6px;
   padding: 0 10px 10px;
-  font-size: 12px;
-  color: var(--text-light);
+  font-size: 13px;
+  color: #6f6860;
   text-align: center;
 }
 
@@ -158,7 +211,10 @@ body {
   display: block;
   font-size: 14px;
   margin-bottom: 6px;
-  color: var(--text-light);
+  /* 标签是用户填表时认字段的依据，原来用 --text-light 浅灰太淡、
+     反而比辅助提示还轻，提深一档、加一点点字重，层级更清楚（Day 9 审查）。 */
+  color: #4a443e;
+  font-weight: 500;
 }
 
 .form-row input,
@@ -204,6 +260,16 @@ body {
 /* 让数字输入框里的数字好认 */
 .form-row input[type="number"] {
   font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 辅助小字（正文区） ---------- */
+/* 顶栏的 .sub-text 已有专属的白色规则；这里管的是正文区的
+   .sub-text——比如创建页的"留空也可以保存"、详情页的"最后更新时间"。
+   它们属于"辅助信息"，应该比正文和表单标签更轻、更淡，
+   不该用正文的深色 16px 抢风头（Day 9 审查修掉的层级倒挂）。 */
+.page-box .sub-text {
+  font-size: 14px;
+  color: var(--text-light);
 }
 
 /* ---------- 提示文字 ---------- */
@@ -265,6 +331,17 @@ body {
 .card-img-empty.detail-img {
   width: 100%;
   flex: none;
+}
+
+/* 详情页立绘区：现在可点击改立绘，鼠标放上去给"可点"的暗示（Day 9） */
+.detail-img-box {
+  cursor: pointer;
+  position: relative;
+}
+
+/* 悬停时立绘微微变亮，提示这里能点 */
+.detail-img-box:hover img {
+  opacity: 0.92;
 }
 
 .detail-text {
@@ -420,6 +497,54 @@ body {
   border-radius: 4px;
   font-family: Consolas, Menlo, monospace;
   font-size: 12px;
+}
+
+/* ---------- 全站导航栏（Day 9 起：一条龙五页共用） ---------- */
+/* 导航栏挂在顶部标题栏下面，五个分页入口横向排开。 */
+.site-nav {
+  background-color: var(--main-dark);
+}
+
+.site-nav ul {
+  max-width: 960px;
+  margin: 0 auto;
+  /* 左右内边距：右边 0，左边 4px——让第一个导航项的文字左缘
+     正好和下方正文文字左缘对齐（导航链接自带 16px 内边距，
+     正文区是 20px padding，差 4px，补这 4px 后上下一条竖线）。
+     原来的 20px 会让"介绍"两个字比正文右偏 16px（Day 9 审查）。 */
+  padding: 0 0 0 4px;
+  list-style: none;
+  display: flex;
+  /* 窄屏时导航项可以横向滚动，不会把页面撑破 */
+  overflow-x: auto;
+}
+
+.site-nav li {
+  flex: 0 0 auto;
+}
+
+/* 导航链接：白字，当前页用米白底 + 主色字高亮。
+   原来整条链压了 opacity:0.9，等于把白字调灰一档、稀释了对比度，
+   改成纯白（opacity:1）让字更分明（Day 9 审查）。 */
+.site-nav a {
+  display: block;
+  padding: 12px 16px;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.site-nav a:hover {
+  opacity: 1;
+}
+
+/* 当前所在的页：给个实底高亮，一眼看出自己在哪 */
+.site-nav a.nav-current {
+  background-color: var(--page-bg);
+  color: var(--main-color);
+  font-weight: bold;
+  opacity: 1;
 }
 
 /* ---------- 手机端微调（验收 #7）---------- */

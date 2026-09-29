@@ -25,45 +25,12 @@
    规则八.1：全部中文注释，命名用简单直白的英文。
    ============================================================ */
 
-/* ---------- 0. 管理口令（小步 6） ---------- */
+/* ---------- 0. 权限说明（Day 9 追加：临时放开权限） ---------- */
 
-// 双链接机制：浏览链接人人可看，管理链接才带口令。
-//   浏览链接：index.html（发给全团，只读）
-//   管理链接：admin.html?key=<下面的口令>（DM 自留，可添加/更新）
-// 依据：PRD 功能清单 P1、验收 #3 与 #5（全程无需注册）
-
-// ⚠️ 关于这个做法的边界，如实写在这里（对应 TECH_DESIGN 风险 #1）：
-// 网页代码是在浏览器里跑的，任何人按 F12 都能看到源码——
-// 所以下面这行口令"挡君子不挡技术高手"：
-//   挡得住：误点进管理页的团友、把浏览链接转发给别人时被顺手点到；
-//   挡不住：真的会打开源码去看的人。
-// MVP 阶段（团内使用、管理链接不外传）够用；
-// 要真正的安全得靠账号系统，而账号系统已列入 PRD 的"本期不做"。
-var ADMIN_KEY = '2ce3wjnja75q';
-
-// 拼出完整的管理链接，方便在管理页里显示出来给你收藏
-var ADMIN_URL = 'admin.html?key=' + ADMIN_KEY;
-
-/**
- * 检查是不是"带着正确口令"进来的。
- * @returns {boolean} 口令正确为 true
- */
-function checkAdminKey() {
-  return getUrlParam('key') === ADMIN_KEY;
-}
-
-/**
- * 口令不对时的处理：把表单藏起来，只留一句说明。
- * 不做成"报错页"，而是温和地把人引回画廊——对方多半只是点错了。
- */
-function showNoPermission() {
-  var form = document.getElementById('character-form');
-  if (form) {
-    form.style.display = 'none';
-  }
-  showMessage('这个页面是 DM 专用的，要从"管理链接"进入才能用。' +
-    '看角色卡请回 <a href="index.html">画廊页</a>。', 'error');
-}
+// 说明：MVP 阶段的"游客 / DM 双链接 + 口令"机制已临时移除。
+// 现阶段游客和 DM 共用同一套页面，任何人都能创建、修改角色卡、改立绘，
+// 方便 Percy 本地调试。等以后做账号登录系统时，再在这里重新做权限分化。
+// （保留了 getUrlParam，页面跳转仍要传角色编号 id，跟口令无关。）
 
 /* ---------- 1. 接上云服务客户端 ---------- */
 
@@ -266,7 +233,7 @@ async function loadCardWall() {
     wall.innerHTML =
       '<div class="empty-tip">' +
       '<p>这个团的角色卡还是空的。</p>' +
-      '<p><a class="btn" href="admin.html">添加第一个角色</a></p>' +
+      '<p><a class="btn" href="create.html">添加第一个角色</a></p>' +
       '</div>';
     return;
   }
@@ -462,7 +429,7 @@ async function handleFormSubmit(event) {
       ' <a href="character.html?id=' + editId + '">去看看</a>', 'ok');
   } else {
     showMessage('已添加「' + escapeHtml(data.name) + '」。' +
-      ' <a href="index.html">回画廊看看</a>', 'ok');
+      ' <a href="archive.html">回档案馆看看</a>', 'ok');
   }
 }
 
@@ -561,10 +528,68 @@ async function loadCharacterDetail() {
     } else {
       portraitBox.innerHTML = '<div class="card-img-empty detail-img">暂无立绘</div>';
     }
+    // 点立绘改立绘（Day 9）：弹出输入框，粘贴新链接后存回云端。
+    // 权限已临时放开，任何人都能点这里改立绘。
+    portraitBox.addEventListener('click', function () {
+      promptChangePortrait(row.id, row.portrait_url || '');
+    });
+  }
+
+  // 「修改角色卡」按钮：把链接补上当前角色编号，点它跳去创建页回填这张卡。
+  // 权限已临时放开（Day 9），不再需要带口令，直接带 id 即可。
+  var editBtn = document.getElementById('btn-edit');
+  if (editBtn) {
+    editBtn.href = 'create.html?id=' + row.id;
   }
 
   // 顶部标题也跟着换成角色名，浏览器标签页看起来更清楚
   document.title = row.name + ' · 跑团角色卡档案馆';
+}
+
+/**
+ * 弹出小窗，让 DM 粘贴新的立绘链接，然后存回云端。
+ * 依据：Day 9 需求「点击立绘可直接上传或修改立绘」——
+ * 受"零注册"约束，采用"贴链接"方案（不破账号底线，见 README 说明）。
+ * @param {string} id 角色编号
+ * @param {string} currentUrl 当前立绘链接（可能为空）
+ */
+async function promptChangePortrait(id, currentUrl) {
+  // 权限已临时放开（Day 9）：不再验口令，任何人都能改立绘。
+  // 让用户输入新链接；点"取消"返回 null，直接不处理
+  var newUrl = window.prompt(
+    '修改立绘：粘贴新的图片链接（图片网址）。\n留空并点确定 = 清除立绘。',
+    currentUrl
+  );
+
+  // 取消（点"取消"或按 Esc）→ 什么都不做
+  if (newUrl === null) {
+    return;
+  }
+
+  // 去掉首尾空格；空串代表"清除立绘"
+  var trimmed = newUrl.trim();
+
+  if (!cloud) {
+    showMessage('云服务没接上，改不了立绘。请检查网络后刷新。', 'error');
+    return;
+  }
+
+  showMessage('正在保存立绘……', 'ok');
+
+  // 只更新 portrait_url 这一列，别的不动
+  var result = await cloud.database
+    .from('characters')
+    .update({ portrait_url: trimmed })
+    .eq('id', id);
+
+  if (result.error) {
+    showMessage('立绘保存失败：' + result.error.message, 'error');
+    return;
+  }
+
+  showMessage('立绘已更新，正在刷新……', 'ok');
+  // 重新加载这张卡，让新立绘立刻显示出来
+  loadCharacterDetail();
 }
 
 /**
@@ -726,22 +751,12 @@ document.addEventListener('DOMContentLoaded', function () {
   if (currentPage === '画廊页') {
     loadCardWall();
   } else if (currentPage === '管理页') {
-    // 先验口令：不是从管理链接进来的，就不给用表单（小步 6）
-    if (!checkAdminKey()) {
-      showNoPermission();
-      return;
-    }
+    // 权限已临时放开（Day 9）：不再验口令，游客和 DM 共用，直接给用表单。
 
     // 表单提交时走我们自己的保存逻辑，而不是浏览器默认行为
     var form = document.getElementById('character-form');
     if (form) {
       form.addEventListener('submit', handleFormSubmit);
-    }
-
-    // 把完整的管理链接显示在页面上，方便收藏（下次直接打开）
-    var linkBox = document.getElementById('admin-link');
-    if (linkBox) {
-      linkBox.textContent = ADMIN_URL;
     }
 
     // 网址带 id 的话，先把现有内容填进表单（改卡场景）

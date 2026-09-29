@@ -11,19 +11,31 @@
   <title>角色详情 · 跑团角色卡档案馆</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-page="archive">
   <header class="top-bar">
     <h1>角色详情</h1>
     <p class="sub-text">跑团角色卡档案馆 · 设定集的一页</p>
   </header>
+
+  <!-- 全站导航栏（五页共用；详情页属于"档案馆"，所以当前页高亮档案馆） -->
+  <nav class="site-nav">
+    <ul>
+      <li><a href="index.html" data-nav="intro">介绍</a></li>
+      <li><a href="rules.html" data-nav="rules">规则资源</a></li>
+      <li><a href="create.html" data-nav="create">创建角色</a></li>
+      <li><a href="archive.html" data-nav="archive">档案馆</a></li>
+      <li><a href="play.html" data-nav="play">跑团</a></li>
+    </ul>
+  </nav>
 
   <main class="page-box">
     <div id="message-box"></div>
 
     <!-- 左右两栏：左边立绘，右边文字（窄屏自动上下排） -->
     <div class="detail-layout">
-      <!-- 立绘区：脚本会往里放图片，没有链接时显示"暂无立绘"占位块 -->
-      <div class="detail-img-box" id="character-portrait">
+      <!-- 立绘区：脚本会往里放图片，没有链接时显示"暂无立绘"占位块。
+           点这一块可以弹窗改立绘链接。 -->
+      <div class="detail-img-box" id="character-portrait" title="点击修改立绘">
         <div class="card-img-empty detail-img">暂无立绘</div>
       </div>
 
@@ -83,7 +95,10 @@
     </div>
 
     <p style="margin-top: 24px;">
-      <a class="btn btn-second" href="index.html">← 返回画廊</a>
+      <a class="btn btn-second" href="archive.html">← 返回档案馆</a>
+      <!-- 修改角色卡：跳到创建页并带上当前角色编号，
+           创建页会自动回填这张卡的内容，改完保存即覆盖（复用现有更新逻辑）。 -->
+      <a class="btn" id="btn-edit" href="create.html">✎ 修改角色卡</a>
     </p>
   </main>
 
@@ -100,5 +115,7 @@
   <script src="cloud-config.js"></script>
   <!-- 页面自己的脚本，最后引入，保证前面的东西都已就位 -->
   <script src="app.js"></script>
+  <!-- 导航高亮脚本 -->
+  <script src="nav.js"></script>
 </body>
 </html>
