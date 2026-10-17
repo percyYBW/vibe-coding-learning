@@ -191,6 +191,15 @@ body {
   background-color: var(--main-dark);
 }
 
+/* 键盘可达性（Day 11 余力加练）：用 Tab 键把焦点移到按钮上时，
+   给一个清晰的焦点框，让"我现在选中了哪个按钮"看得见。
+   用 :focus-visible 是关键——只有键盘聚焦才显示，鼠标点击不显示，
+   两种操作方式互不打架。 */
+.btn:focus-visible {
+  outline: 3px solid var(--main-dark);
+  outline-offset: 2px;
+}
+
 /* 次要按钮：白底描边 */
 .btn-second {
   background-color: transparent;
@@ -281,6 +290,108 @@ body {
   padding: 40px 20px;
   text-align: center;
   color: var(--text-light);
+}
+
+/* ---------- 筛选栏（Day 12 追加）----------
+   档案馆页的"关键字 + 职业"筛选条，以及筛不到结果时的空状态。
+   组件结构和 id 名字见 .workbuddy/skills/filter-check/SKILL.md 的固定契约。
+   ------------------------------------------ */
+
+/* 筛选条：一行摆开三个控件，宽度不够时自动换行 */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  /* 底部对齐：按钮和输入框的底边对齐，视觉上不歪 */
+  align-items: flex-end;
+  gap: 12px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--line-color);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+}
+
+/* 一个"标签 + 控件"的小竖排 */
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-label {
+  font-size: 13px;
+  color: var(--text-light);
+}
+
+/* 输入框和下拉框：同款长相，避免两个控件两种风格 */
+#filter-keyword,
+#filter-class {
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text-main);
+  background-color: var(--page-bg);
+  border: 1px solid var(--line-color);
+  border-radius: 8px;
+  padding: 8px 10px;
+  min-width: 180px;
+}
+
+/* 键盘聚焦时给一圈主色描边，鼠标点击不会看到（配合全局 .btn:focus-visible 的思路） */
+#filter-keyword:focus,
+#filter-class:focus {
+  outline: 2px solid var(--main-color);
+  outline-offset: 1px;
+}
+
+/* 结果计数：用 margin-left:auto 顶到最右边，一眼看到筛出了多少 */
+.filter-count {
+  margin: 0 0 6px auto;
+  font-size: 13px;
+  color: var(--text-light);
+}
+
+/* hidden 时彻底不占位置（没数据时不留一块空白） */
+.filter-count[hidden] {
+  display: none;
+}
+
+/* 筛不到结果的空状态：和"库里没卡"共用 .empty-tip 的长相，只把留白收小一点 */
+#filter-empty {
+  padding: 30px 20px;
+  margin-bottom: 18px;
+}
+
+#filter-empty p {
+  margin: 6px 0;
+}
+
+#filter-empty .sub-text {
+  font-size: 13px;
+  color: var(--text-light);
+}
+
+#filter-empty .btn {
+  display: inline-block;
+  margin-top: 8px;
+}
+
+/* 窄屏：筛选条改成上下堆叠，输入框撑满一行，别挤成细细一条 */
+@media (max-width: 620px) {
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #filter-keyword,
+  #filter-class {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .filter-count {
+    margin: 4px 0 0;
+    text-align: right;
+  }
 }
 
 /* 一条操作反馈（成功 / 出错都用它，靠颜色区分） */
@@ -561,5 +672,308 @@ body {
   .card-wall {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     gap: 12px;
+  }
+}
+
+/* ============================================================
+   骰子浮窗（全局组件，Day 11 追加）
+   ------------------------------------------------------------
+   HTML 和逻辑都由 nav.js 注入（代码只写一处，六个页面全都有），
+   这里只管长相。布局：右上角一颗圆形骰子按钮，点开一个面板，
+   面板左列是七种骰子的数量选择，右边是投掷区（3D 翻滚动画）。
+   ============================================================ */
+
+/* 右上角的悬浮骰子按钮（Floating Action Button）：
+   按钮里放的是 SVG 画的 d20 图标，所以底色用米白衬托红棕骰体 */
+.dice-fab {
+  position: fixed;
+  top: 68px;            /* 避开顶部导航栏（导航高约 50px） */
+  right: 16px;
+  z-index: 120;         /* 浮在所有内容之上 */
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  color: #ffffff;
+  background-color: var(--card-bg);
+  border: 2px solid var(--main-dark);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: transform 0.15s;
+  /* 图标在圆钮里居中 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+/* d20 图标本身：占圆钮的七成大小，加一点投影更有"悬浮"感 */
+.dice-fab svg {
+  width: 34px;
+  height: 34px;
+  display: block;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+}
+
+.dice-fab:hover {
+  transform: scale(1.08);
+}
+
+/* 展开后的投骰面板 */
+.dice-panel {
+  position: fixed;
+  top: 130px;
+  right: 16px;
+  z-index: 120;
+  /* 桌面宽 620px；窄屏自动收窄，不撑破页面 */
+  width: min(620px, calc(100vw - 32px));
+  background-color: var(--card-bg);
+  border: 1px solid var(--line-color);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+  padding: 16px;
+  /* 默认收起；加 .open 才展开 */
+  display: none;
+}
+
+.dice-panel.open {
+  display: block;
+  animation: dice-panel-in 0.2s ease-out;
+}
+
+@keyframes dice-panel-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 面板标题行 */
+.dice-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 0 12px;
+}
+
+.dice-panel-head h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+/* 面板标题里的小号 d20 图标：跟文字基线对齐 */
+.dice-panel-head h2 svg {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  vertical-align: -3px;
+  margin-right: 6px;
+}
+
+/* 关闭按钮：一个小 "×" */
+.dice-close {
+  border: none;
+  background: none;
+  font-size: 20px;
+  color: var(--text-light);
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.dice-close:hover {
+  background-color: var(--page-bg);
+  color: var(--text-main);
+}
+
+/* 面板主体：左列（选骰子）+ 右侧（投掷区） */
+.dice-panel-layout {
+  display: flex;
+  gap: 16px;
+}
+
+/* 左列：七种骰子的数量选择 */
+.dice-list {
+  width: 190px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 一行骰子：骰子按钮 + 数量徽章 */
+.die-row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+/* 骰子按钮本体：左击 +1，右击 -1（右键菜单已被 JS 拦掉） */
+.die-chip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--text-main);
+  background-color: var(--page-bg);
+  border: 1px solid var(--line-color);
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;           /* 连点时不让文字被选中发蓝 */
+  transition: transform 0.1s, background-color 0.1s;
+}
+
+.die-chip:active {
+  transform: scale(0.95);
+}
+
+.die-chip:hover {
+  background-color: var(--card-bg);
+}
+
+/* 数量徽章：为 0 时半透明，有数时主色实底 */
+.die-count {
+  min-width: 26px;
+  padding: 2px 6px;
+  text-align: center;
+  font-size: 13px;
+  border-radius: 10px;
+  color: var(--text-light);
+  background-color: transparent;
+  border: 1px solid var(--line-color);
+}
+
+.die-count.has-dice {
+  color: #ffffff;
+  background-color: var(--main-color);
+  border-color: var(--main-dark);
+}
+
+/* 加值行：− 按钮 + 数值 + ＋ 按钮 */
+.dice-mod-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line-color);
+}
+
+.dice-mod-row .mod-label {
+  font-size: 14px;
+  color: var(--text-light);
+}
+
+.mod-btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1;
+  border-radius: 8px;
+}
+
+#dice-mod-value {
+  min-width: 44px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Roll 按钮占满左列剩余宽度 */
+#dice-roll-btn {
+  margin-top: 10px;
+  width: 100%;
+}
+
+#dice-roll-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* 右侧投掷区：一块"桌面"，three.js 的 3D 画布铺在这里 */
+.dice-arena {
+  flex: 1;
+  min-height: 280px;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--page-bg);
+  border: 1px dashed var(--line-color);
+  border-radius: 10px;
+}
+
+/* 3D 画布容器：铺满整个投掷区 */
+#dice-canvas-wrap {
+  position: absolute;
+  inset: 0;
+}
+
+/* 投掷区的引导/提示文字：悬浮在画布上层 */
+.dice-arena-hint {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  color: var(--text-light);
+  font-size: 14px;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* 结果行：悬浮在投掷区底部，半透明白底保证压在 3D 画面上也读得清 */
+.dice-total {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 10px;
+  margin: 0;
+  padding: 6px 10px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--main-color);
+  background-color: rgba(255, 255, 255, 0.88);
+  border-radius: 8px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* 键盘焦点框：Tab 到骰子/按钮时显示（延续余力加练的可达性标准） */
+.die-chip:focus-visible,
+.mod-btn:focus-visible,
+.dice-fab:focus-visible,
+.dice-close:focus-visible,
+#dice-roll-btn:focus-visible {
+  outline: 3px solid var(--main-color);
+  outline-offset: 2px;
+}
+
+/* 窄屏（手机）：左右两栏改上下堆叠，骰子列表换两列排布 */
+@media (max-width: 620px) {
+  .dice-panel {
+    top: 128px;
+  }
+
+  .dice-panel-layout {
+    flex-direction: column;
+  }
+
+  .dice-list {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .die-row {
+    width: calc(50% - 4px);
+  }
+
+  .dice-arena {
+    min-height: 220px;
   }
 }

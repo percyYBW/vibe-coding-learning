@@ -193,6 +193,13 @@ function fillNumber(id, value) {
 /* ---------- 4. 画廊页：把角色卡画成卡片墙 ---------- */
 
 /**
+ * 从云端读到的全部角色卡，存在这个变量里。
+ * 筛选时在"这一份完整数据"上做过滤，不重新去云端问一遍——
+ * 数据只取一次，筛选就是瞬间的事。
+ */
+var allCharacters = [];
+
+/**
  * 从云端读出所有角色卡，画到卡片墙上。
  * 依据：PRD 验收 #1（打开就能看到卡片墙；一张卡都没有时给引导文案）
  */
@@ -228,21 +235,42 @@ async function loadCardWall() {
     return;
   }
 
+  // 把读到的完整名单存起来，后面筛选就用它
+  allCharacters = rows || [];
+
   // 情况二：一张卡都没有 —— 显示引导文案（验收 #1 的另一半）
-  if (!rows || rows.length === 0) {
+  if (allCharacters.length === 0) {
     wall.innerHTML =
       '<div class="empty-tip">' +
       '<p>这个团的角色卡还是空的。</p>' +
       '<p><a class="btn" href="create.html">添加第一个角色</a></p>' +
       '</div>';
+    // 库里本来就没卡，跟"筛不到"是两回事，这里把筛选相关的提示收干净
+    updateFilterCount(0, 0);
+    showFilterEmpty(false);
     return;
   }
 
-  // 情况三：有卡 —— 一张张拼成卡片
+  // 情况三：有卡 —— 用读到的职业填充下拉，接上筛选，然后画第一遍
+  fillClassOptions(allCharacters);
+  bindFilterEvents();
+  applyFilter();
+}
+
+/**
+ * 把一串角色卡画到卡片墙上（只负责画，不管筛选）。
+ * @param {Array} list 要画出来的角色卡
+ */
+function renderCards(list) {
+  var wall = document.getElementById('card-wall');
+  if (!wall) {
+    return;
+  }
+
   var html = '';
 
-  for (var i = 0; i < rows.length; i++) {
-    var row = rows[i];
+  for (var i = 0; i < list.length; i++) {
+    var row = list[i];
     // 链接里带上角色编号，详情页靠它知道该显示哪张卡
     html += '<a class="card" href="character.html?id=' + row.id + '">';
 
@@ -273,7 +301,158 @@ async function loadCardWall() {
   }
 
   wall.innerHTML = html;
-  console.log('画廊墙已渲染，共 ' + rows.length + ' 张卡');
+}
+
+/* ---------- 4.5 筛选（Day 12 新增）----------
+   合格线见 .workbuddy/skills/filter-check/SKILL.md：
+   有结果 / 无结果有提示 / 清空能恢复 / 有计数 / 大小写与空格容错 /
+   不破坏卡片链接 / 键盘可用 / 有专门样式。
+   ------------------------------------------ */
+
+/**
+ * 用读到的角色卡，把"职业"下拉填出来（去重 + 排序，顺序才稳定）。
+ * @param {Array} rows 全部角色卡
+ */
+function fillClassOptions(rows) {
+  var classBox = document.getElementById('filter-class');
+  if (!classBox) {
+    return;
+  }
+
+  // 用一个普通对象当"集合"：键是职业名，值没用，只为去重
+  var seen = {};
+  var classList = [];
+
+  for (var i = 0; i < rows.length; i++) {
+    var name = (rows[i].class_name || '').trim();
+    if (name && !seen[name]) {
+      seen[name] = true;
+      classList.push(name);
+    }
+  }
+
+  // 排序：字符顺序固定下来，每次打开下拉顺序都一样，不会跳来跳去
+  classList.sort();
+
+  var html = '<option value="">全部职业</option>';
+  for (var j = 0; j < classList.length; j++) {
+    html += '<option value="' + escapeHtml(classList[j]) + '">' +
+      escapeHtml(classList[j]) + '</option>';
+  }
+  classBox.innerHTML = html;
+}
+
+/**
+ * 按当前的两个条件，筛出该显示的角色卡，并更新画面。
+ * 三种情况都在这一个函数里兜住：
+ *   有结果 → 画出来；无结果 → 收起卡片、亮出提示；清空 → 条件复位后重跑本函数。
+ */
+function applyFilter() {
+  var keywordBox = document.getElementById('filter-keyword');
+  var classBox = document.getElementById('filter-class');
+  if (!keywordBox || !classBox) {
+    return;
+  }
+
+  // trim：用户手滑多敲的空格不算条件；toLowerCase：大小写不敏感
+  var keyword = keywordBox.value.trim().toLowerCase();
+  var pickedClass = classBox.value;
+
+  var visible = [];
+
+  for (var i = 0; i < allCharacters.length; i++) {
+    var row = allCharacters[i];
+
+    // 关键字命中：名字或简介里出现过就算（任一命中即可）
+    var nameText = (row.name || '').toLowerCase();
+    var summaryText = (row.summary || '').toLowerCase();
+    var keywordOk = keyword === '' ||
+      nameText.indexOf(keyword) !== -1 ||
+      summaryText.indexOf(keyword) !== -1;
+
+    // 职业命中：没选职业（"全部职业"）就算命中，否则要完全相等
+    var classOk = pickedClass === '' || (row.class_name || '') === pickedClass;
+
+    if (keywordOk && classOk) {
+      visible.push(row);
+    }
+  }
+
+  renderCards(visible);
+  updateFilterCount(visible.length, allCharacters.length);
+
+  // 有卡但一张都没筛出来：亮出空状态提示（附清空出口）
+  showFilterEmpty(visible.length === 0);
+}
+
+/**
+ * 更新结果计数文字。
+ * @param {number} shown 筛出来的数量
+ * @param {number} total 全部数量
+ */
+function updateFilterCount(shown, total) {
+  var el = document.getElementById('filter-count');
+  if (!el) {
+    return;
+  }
+
+  // 库里一张卡都没有时不显示计数（"找到 0/0"没意义）
+  if (total === 0) {
+    el.textContent = '';
+    el.hidden = true;
+    return;
+  }
+
+  el.hidden = false;
+  el.textContent = (shown === total)
+    ? '共 ' + total + ' 位角色'
+    : '找到 ' + shown + ' / ' + total + ' 位角色';
+}
+
+/** 显示或隐藏"筛不到结果"的提示 */
+function showFilterEmpty(show) {
+  var box = document.getElementById('filter-empty');
+  if (box) {
+    box.hidden = !show;
+  }
+}
+
+/** 筛选事件只绑一次（页面重复加载时不会越绑越多） */
+var filterEventsBound = false;
+
+/** 接上筛选控件的事件：边打边筛、换职业立刻筛、清空一键复位 */
+function bindFilterEvents() {
+  if (filterEventsBound) {
+    return;
+  }
+  filterEventsBound = true;
+
+  var keywordBox = document.getElementById('filter-keyword');
+  var classBox = document.getElementById('filter-class');
+  var resetBtn = document.getElementById('filter-reset');
+  // 空状态里那个按钮，和上面的"清空筛选"干同一件事
+  var emptyResetBtn = document.getElementById('filter-empty-reset');
+
+  // 清空 = 两个字面控件都复位，然后重跑筛选（等于"恢复全部"）
+  function clearAll() {
+    keywordBox.value = '';
+    classBox.value = '';
+    applyFilter();
+  }
+
+  if (keywordBox) {
+    // input：每敲一个字就筛，不用按回车（打字即筛选，反馈最快）
+    keywordBox.addEventListener('input', applyFilter);
+  }
+  if (classBox) {
+    classBox.addEventListener('change', applyFilter);
+  }
+  if (resetBtn) {
+    resetBtn.addEventListener('click', clearAll);
+  }
+  if (emptyResetBtn) {
+    emptyResetBtn.addEventListener('click', clearAll);
+  }
 }
 
 /* ---------- 5. 管理页：添加 / 更新角色 ---------- */

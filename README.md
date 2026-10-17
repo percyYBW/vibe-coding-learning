@@ -78,9 +78,9 @@ vibe_coding_work_place/
 ├── play.html         跑团页（后续开发：战地图/骰子等，暂为骨架）
 ├── style.css         全部页面共用的样式（配色 / 卡片墙 / 导航 / 响应式）
 ├── app.js            档案馆/创建/详情三页共用的脚本（读数据 / 写数据）
-├── nav.js            全站导航当前页高亮脚本
+├── nav.js            全站公共脚本：导航当前页高亮 + 骰子浮窗（全站组件）
 ├── cloud-config.js   云服务配置（服务地址 + 应用标识，见下方"关于密钥"）
-├── vendor/           云服务 SDK 的本地副本（页面不依赖外部 CDN，见上文说明）
+├── vendor/           本地化的第三方库（页面不依赖外部 CDN，见下）
 ├── PRD.md            产品需求文档（Day 4）
 ├── TECH_DESIGN.md    技术设计文档（Day 5）
 ├── research.md       需求研究（Day 3）
@@ -91,6 +91,17 @@ vibe_coding_work_place/
 
 纯前端网页（HTML / CSS / JavaScript，无框架）+ WorkBuddy 云服务（云端数据库存角色卡）。
 上线用 WorkBuddy 的"发布为应用"（Day 7 之后的事，见 PRD）。
+
+### vendor/ 里有什么（唯一的第三方依赖，全部本地化、不走 CDN）
+
+| 文件 | 是什么 | 为什么进仓库 |
+|---|---|---|
+| `workbuddy-cloud-sdk.js` | 云服务 SDK（约 62KB） | CDN 抽风会导致"角色卡读取失败"（Day 7 踩过） |
+| `three.min.js` | three.js r90 3D 渲染库（约 528KB） | 骰子浮窗的真 3D 多面体骰子（Day 11，Percy 拍板引入） |
+| `cannon.min.js` | cannon.js 物理引擎（约 132KB） | 骰子的真实弹跳翻滚 |
+| `threejs-dice.js` | 多面体骰子库 MIT（约 22KB，已本地补丁） | d4~d20 几何体 + 面数字 + 定结果物理演出；补丁：ESM 转全局脚本、D10 支持自定义面文字（百分骰用） |
+
+骰子浮窗在"第一次点开"时才懒加载这三个大文件，不拖慢页面打开。
 
 ## 关于密钥（给未来的自己）
 

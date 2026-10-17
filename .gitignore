@@ -4,8 +4,9 @@
 .env
 .env.*
 
-# AI 助手的工作数据（本机私有，不上传）
-.workbuddy/
+# AI 助手的工作数据（本机私有，不上传；skills 目录例外——Skill 是项目资产，要进仓库团队共享）
+.workbuddy/*
+!.workbuddy/skills/
 
 # 依赖包目录（体积巨大，靠 package.lock 重建）
 node_modules/

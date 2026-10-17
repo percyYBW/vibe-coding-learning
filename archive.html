@@ -34,6 +34,37 @@
     <!-- 状态提示区：显示"正在读取""读取失败"等信息 -->
     <div id="message-box"></div>
 
+    <!-- 筛选栏（Day 12 新增）：关键字 + 职业两个条件。
+         筛选只在前端已有的数据上做过滤，不重新请求云端（快，也不浪费流量）。
+         这里所有 id 都按 .workbuddy/skills/filter-check/SKILL.md 里的
+         "固定 id 契约"来起名——名字统一，检查脚本才认得出这些部件。 -->
+    <div class="filter-bar" id="filter-bar">
+      <div class="filter-field">
+        <label class="filter-label" for="filter-keyword">关键字</label>
+        <input type="search" id="filter-keyword" placeholder="搜名字 / 简介"
+               aria-label="按名字或简介搜索角色卡">
+      </div>
+      <div class="filter-field">
+        <label class="filter-label" for="filter-class">职业</label>
+        <select id="filter-class" aria-label="按职业筛选角色卡">
+          <option value="">全部职业</option>
+        </select>
+      </div>
+      <button type="button" class="btn" id="filter-reset"
+              aria-label="清空筛选条件，显示全部角色卡">清空筛选</button>
+      <!-- 结果计数：role=status + aria-live 让读屏软件也能念出"筛出了多少" -->
+      <p class="filter-count" id="filter-count" role="status" aria-live="polite"></p>
+    </div>
+
+    <!-- 无结果的空状态：有卡但筛不到时出现。
+         不能只留一片空白——那样用户会以为页面坏了。
+         提示里给出"清空筛选"的出口，用户一步就能回到全部。 -->
+    <div class="empty-tip" id="filter-empty" hidden>
+      <p>没有符合条件的角色卡。</p>
+      <p class="sub-text">换个关键字、换个职业，或者清空条件看全部。</p>
+      <p><button type="button" class="btn" id="filter-empty-reset">清空筛选</button></p>
+    </div>
+
     <!-- 画廊墙：角色卡一张张排在这里，内容由 app.js 从云端读出后填进来 -->
     <div class="card-wall" id="card-wall"></div>
 
